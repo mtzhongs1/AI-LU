@@ -1,0 +1,62 @@
+server:
+  port: 12000
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
+
+
+spring:
+  #TODO：解决使用Redisson和@Cacheable同时使用报错的问题
+  cache:
+    type: redis
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+    allow-bean-definition-overriding: true
+
+  datasource:
+    druid:
+      driver-class-name: ${ailu.datasource.driver-class-name}
+      url: jdbc:mysql://${ailu.datasource.host}:${ailu.datasource.port}/${ailu.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${ailu.datasource.username}
+      password: ${ailu.datasource.password}
+
+mybatis:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.ailu.entity
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+  level:
+    com:
+      ailu:
+        mapper: info
+        service: info
+        controller: info
+
+local:
+  files: /RAG/data/files/
+  images: /RAG/data/images/
+  tmp-images: /RAG/data/tmp_images/
+  chat-memory: /RAG/data/chat_memory/
+
+gpt:
+  llm:
+    qianfan: QianFanServiceImpl
+    glm: GlmServiceImpl
+  qianfan:
+    appID: 92565648
+    APIKey: 449k1dEkappNvotvX1Hmb6j3
+    SecretKey: mZcN7L8m0Qd8A7RKDtN9CNXncAAzrkaD
+  glm:
+    apiKey: a6ee26ccfb6592978252954fcdb8a45a.XQxJHb2VlpyoxECr
+
+
+
+
