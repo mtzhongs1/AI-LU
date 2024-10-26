@@ -53,11 +53,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>${mybatis.spring}</version>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok}</version>
@@ -115,18 +110,6 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>${commons.lang}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>${druid}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>${pagehelper}</version>
         </dependency>
 
         <dependency>
@@ -207,17 +190,7 @@
         <!--            </dependency>-->
         <!--微信支付-->
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${jedis}</version>
-        </dependency>
 
-        <dependency>
-            <groupId>com.redislabs</groupId>
-            <artifactId>jredisearch</artifactId>
-            <version>${redis.search}</version>
-        </dependency>
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
@@ -265,11 +238,7 @@
             <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
             <version>${langchain4j.version}</version>
         </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-redis</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>

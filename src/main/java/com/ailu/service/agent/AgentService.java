@@ -39,7 +39,7 @@ public class AgentService {
         Result result = switch (category) {
             case CHAT -> Result.success(chat.chat(prompt.getPrompt()));
             case IMAGE_GENERATION -> Result.success(zhipuAiImageModel.generate(prompt.getPrompt()).content().url());
-            case ANSWER_QUESTIONS -> Result.error();
+            case ANSWER_QUESTIONS -> Result.success();
             default -> throw new IllegalStateException("识别异常: " + category);
         };
         return result;

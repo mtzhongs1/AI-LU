@@ -1,8 +1,0 @@
-ailu:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    host: 8.134.130.93
-    port: 3307
-    database: tiny_universe
-    username: root
-    password: 123456
