@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @Description:
+ * @Description: 用户输入内容
  * @Author: ailu
  * @Date: 2024/10/25 下午2:42
  */

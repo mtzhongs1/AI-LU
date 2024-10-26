@@ -89,14 +89,13 @@ public class QAServiceImpl implements QAServices {
                 .chatMemoryProvider(chatMemoryProvider)
                 .build();
 
+        //流式响应
         TokenStream tokenStream = iqaServices.answer(prompt.getPrompt());
         SseEmitter sseEmitter = new SseEmitter();
         tokenStream
-                .onNext((content) -> {
-                    log.info(content);
-                    //加空格配合前端的fetchEventSource进行解析，见https://github.com/Azure/fetch-event-source/blob/45ac3cfffd30b05b79fbf95c21e67d4ef59aa56a/src/parse.ts#L129-L133
+                .onNext((token) -> {
                     try {
-                        sseEmitter.send(content);
+                        sseEmitter.send(token);
                     } catch (IOException e) {
                         log.error("stream onNext error", e);
                     }
@@ -109,5 +108,6 @@ public class QAServiceImpl implements QAServices {
                     log.error("stream error", error);
                 })
                 .start();
+        return sseEmitter;
     }
 }
