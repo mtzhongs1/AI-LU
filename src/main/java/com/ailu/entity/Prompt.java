@@ -15,5 +15,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Prompt {
     private String prompt;
-    private String knowledgeledgeUuidId;
+    private String knowledgeBaseUuid;
 }

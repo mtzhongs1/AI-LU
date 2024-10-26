@@ -22,7 +22,7 @@ public class Zhipu {
     public static final String KEY = "a6ee26ccfb6592978252954fcdb8a45a.XQxJHb2VlpyoxECr";
 
     private static final Duration TIME_OUT = Duration.of(60000, ChronoUnit.MILLIS);
-    private static final String BASE_URL = "https://open.bigmodel.cn";
+    private static final String BASE_URL = "https://open.bigmodel.cn/";
 
     public static ChatLanguageModel buildChatLanguageModel(String model,double temperature){
         return ZhipuAiChatModel.builder()

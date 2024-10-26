@@ -1,6 +1,7 @@
 package com.ailu.service.aiServices;
 
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
@@ -13,5 +14,5 @@ import dev.langchain4j.service.V;
 public interface IChatServices {
     @SystemMessage("你是一个聊天机器人，负责和用户进行日常对话")
     @UserMessage("{{prompt}}")
-    String chat(@V("prompt") String prompt);
+    TokenStream chat(@V("prompt") String prompt);
 }

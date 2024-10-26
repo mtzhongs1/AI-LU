@@ -2,22 +2,20 @@ package com.ailu.service.aiServices.Impl;
 
 import com.ailu.entity.Prompt;
 import com.ailu.properties.models.Zhipu;
+import com.ailu.service.aiServices.IQAServices;
 import com.ailu.service.aiServices.QAServices;
+import com.ailu.util.TokenStreamUtil;
 import com.google.common.collect.ImmutableMap;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
-import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.TokenStream;
-import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import jakarta.annotation.Resource;
@@ -62,11 +60,8 @@ public class QAServiceImpl implements QAServices {
                 .minScore(0.75)
                 // 根据query动态指定minScore，这里固定返回0.75
                 .dynamicMinScore(query -> 0.75)
-                .filter(metadataKey("uuid").isEqualTo(prompt.getKnowledgeledgeUuidId()))
+                .filter(metadataKey("uuid").isEqualTo(prompt.getKnowledgeBaseUuid()))
                         .build();
-
-        // 创建一个元数据条件映射，用于文档检索
-        Map<String, String> metadataCond = ImmutableMap.of("uuid", prompt.getKnowledgeledgeUuidId());
 
         // 创建聊天记忆提供者，用于管理聊天历史记录
         ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
@@ -89,25 +84,10 @@ public class QAServiceImpl implements QAServices {
                 .chatMemoryProvider(chatMemoryProvider)
                 .build();
 
-        //流式响应
-        TokenStream tokenStream = iqaServices.answer(prompt.getPrompt());
+        //流式响应,memoryId暂且给1，实际可设为用户id
+        TokenStream tokenStream = iqaServices.answerQuestion(1,prompt.getPrompt());
         SseEmitter sseEmitter = new SseEmitter();
-        tokenStream
-                .onNext((token) -> {
-                    try {
-                        sseEmitter.send(token);
-                    } catch (IOException e) {
-                        log.error("stream onNext error", e);
-                    }
-                })
-                .onComplete((response) -> {
-                    log.info("返回数据结束了:{}", response);
-                    sseEmitter.complete();
-                })
-                .onError((error) -> {
-                    log.error("stream error", error);
-                })
-                .start();
+        TokenStreamUtil.toSseEmitter(tokenStream,sseEmitter);
         return sseEmitter;
     }
 }

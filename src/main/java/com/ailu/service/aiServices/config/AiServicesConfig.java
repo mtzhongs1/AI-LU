@@ -5,6 +5,7 @@ import com.ailu.service.aiServices.ClassificationServices;
 import com.ailu.service.aiServices.ComputeServices;
 import com.ailu.service.aiServices.IChatServices;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.zhipu.ZhipuAiChatModel;
 import dev.langchain4j.model.zhipu.ZhipuAiImageModel;
 import dev.langchain4j.model.zhipu.ZhipuAiStreamingChatModel;
 import dev.langchain4j.service.AiServices;
@@ -38,7 +39,7 @@ public class AiServicesConfig {
 
     @Bean
     public ComputeServices computeServices(){
-        ZhipuAiStreamingChatModel model = Zhipu.buildStreamingChatModel(Zhipu.GLM_4_FLASH, 0.9);
+        ChatLanguageModel model = Zhipu.buildChatLanguageModel(Zhipu.GLM_4_FLASH, 0.9);
         return AiServices.create(ComputeServices.class, model);
     }
 }
