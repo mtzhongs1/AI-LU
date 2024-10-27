@@ -19,7 +19,7 @@ import java.time.temporal.ChronoUnit;
 public class Zhipu {
     public static final String GLM_4_FLASH = "glm-4-flash";
     public static final String COGVIEW_3_PLUS = "cogview-3-plus";
-    public static final String KEY = "a6ee26ccfb6592978252954fcdb8a45a.XQxJHb2VlpyoxECr";
+    public static final String KEY = "xxx";
 
     private static final Duration TIME_OUT = Duration.of(60000, ChronoUnit.MILLIS);
     private static final String BASE_URL = "https://open.bigmodel.cn/";
