@@ -4,11 +4,8 @@ import com.ailu.common.Result;
 import com.ailu.entity.Prompt;
 import com.ailu.properties.enums.ContentCategoryEnum;
 import com.ailu.properties.models.Zhipu;
-import com.ailu.service.aiServices.ClassificationServices;
-import com.ailu.service.aiServices.ComputeServices;
-import com.ailu.service.aiServices.IChatServices;
+import com.ailu.service.aiServices.*;
 import com.ailu.service.aiServices.Impl.IChatServicesImpl;
-import com.ailu.service.aiServices.QAServices;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
@@ -19,6 +16,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @Description: Agent接口
  * @Author: ailu
@@ -28,6 +28,9 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class AgentService {
+    @Autowired
+    private CustomizeServices customizeServices;
+
     @Autowired
     private ClassificationServices classification;
 
@@ -44,13 +47,25 @@ public class AgentService {
     private ComputeServices computeServices;
 
     public Result agent(Prompt prompt){
-        ContentCategoryEnum category = classification.classify(prompt.getPrompt());
-        Result result = switch (category) {
-            case CHAT -> Result.success(iChatServicesImpl.chat(prompt.getPrompt()));
-            case IMAGE_GENERATION -> Result.success(zhipuAiImageModel.generate(prompt.getPrompt()).content().url());
-            case ANSWER_QUESTIONS -> Result.success(qaServices.answer(prompt));
-            case COMPUTE -> Result.success(computeServices.compute(prompt.getPrompt()));
-        };
-        return result;
+        //切分用户问题
+        List<String> promptSegs = customizeServices.splitPrompt(prompt.getPrompt());
+
+        List<Object> results = new ArrayList<>();
+        for (String promptSeg : promptSegs) {
+            //获取用户问题分类
+            ContentCategoryEnum category = classification.classify(promptSeg);
+            //根据分类执行不同的AiServices
+            Object result = switch (category) {
+                case CHAT -> iChatServicesImpl.chat(promptSeg);
+                case IMAGE_GENERATION -> zhipuAiImageModel.generate(promptSeg).content().url();
+                case COMPUTE -> computeServices.compute(promptSeg);
+                case ANSWER_QUESTIONS -> {
+                    Prompt p = new Prompt(promptSeg, prompt.getKnowledgeBaseUuid());
+                    yield qaServices.answer(p);
+                }
+            };
+            results.add(result);
+        }
+        return Result.success(results);
     }
 }

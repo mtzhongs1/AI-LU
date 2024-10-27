@@ -3,6 +3,7 @@ package com.ailu.service.aiServices.config;
 import com.ailu.properties.models.Zhipu;
 import com.ailu.service.aiServices.ClassificationServices;
 import com.ailu.service.aiServices.ComputeServices;
+import com.ailu.service.aiServices.CustomizeServices;
 import com.ailu.service.aiServices.IChatServices;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel;
@@ -13,13 +14,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * @Description:
+ * @Description: 注册AiService的Bean
  * @Author: ailu
  * @Date: 2024/10/25 下午3:38
  */
 
 @Configuration
 public class AiServicesConfig {
+
+    @Bean
+    public CustomizeServices customizeServices()
+    {
+        ChatLanguageModel model = Zhipu.buildChatLanguageModel(Zhipu.GLM_4_FLASH, 0.9);
+        return AiServices.create(CustomizeServices.class, model);
+    }
+
     @Bean
     public ClassificationServices classificationServices()
     {

@@ -1,10 +1,7 @@
 package com.ailu.properties.enums;
 
 import dev.langchain4j.model.output.structured.Description;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * @Description: 对用户问题进行内容分类
@@ -24,7 +21,13 @@ public enum ContentCategoryEnum {
     @Description("计算运算式")
     COMPUTE(4,"计算");
 
+    ContentCategoryEnum(Integer type, String description) {
+        this.type = type;
+        this.description = description;
+    }
 
     private Integer type;
     private String description;
+    @Setter
+    private String prompt;
 }

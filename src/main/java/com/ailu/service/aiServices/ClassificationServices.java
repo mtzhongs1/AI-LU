@@ -5,6 +5,8 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
+import java.util.List;
+
 /**
  * @Description: AI分类用户内容接口
  * @Author: ailu

@@ -23,9 +23,9 @@ public class EmbeddingConfig {
     @Resource(name = "freeThreadPoolExecutor")
     private ThreadPoolExecutor freeThreadPoolExecutor;
 
-
     @Bean
     public EmbeddingModel embeddedModel() {
+        //freeThreadPoolExecutor是线程池，用于并行化
         return new AllMiniLmL6V2EmbeddingModel(freeThreadPoolExecutor);
     }
     @Bean

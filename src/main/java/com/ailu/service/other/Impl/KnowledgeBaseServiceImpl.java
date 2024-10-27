@@ -51,7 +51,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     public void uploadKnowledgeBase(MultipartFile file) {
-        //文档预处理
+        //保存文档到本地
         String originalFilename = file.getOriginalFilename();
         String uuid = UuidUtils.getUUID();
         log.info("上传文档的UUID为：{}",uuid);
@@ -59,7 +59,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         String ext = getFileExtension(fileName);
         String pathName = "D:/RAG/" + uuid + "." + ext;
 
-        //保存文档到本地
         try {
             file.transferTo(new File(pathName));
         } catch (IOException e) {
@@ -80,7 +79,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
                 // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
                 .documentSplitter(DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer()))
-
                 .embeddingModel(embeddedModel)
                 .embeddingStore(embeddingStore)
                 .build();

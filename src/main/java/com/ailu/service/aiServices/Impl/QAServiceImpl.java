@@ -50,12 +50,24 @@ public class QAServiceImpl implements QAServices {
 
     @Override
     public SseEmitter answer(Prompt prompt) {
+
+        //如果知识库id为null,则直接回答问题
+        if(prompt.getKnowledgeBaseUuid() == null){
+            IQAServices iqaServices = AiServices.builder(IQAServices.class)
+                    .streamingChatLanguageModel(Zhipu.buildStreamingChatModel(Zhipu.GLM_4_FLASH, 0.2))
+                    .build();
+            TokenStream tokenStream = iqaServices.answerQuestion(1,prompt.getPrompt());
+            SseEmitter sseEmitter = new SseEmitter();
+            TokenStreamUtil.toSseEmitter(tokenStream,sseEmitter);
+            return sseEmitter;
+        }
+
         //内容检索器
         ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
                 .maxResults(3)
-                // 根据query动态指定maMaxReports，这里固定返回3
+                // 根据query动态指定maxResults，这里固定返回3
                 .dynamicMaxResults(query -> 3)
                 .minScore(0.75)
                 // 根据query动态指定minScore，这里固定返回0.75
