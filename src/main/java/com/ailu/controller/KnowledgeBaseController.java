@@ -20,9 +20,21 @@ public class KnowledgeBaseController {
     @Autowired
     private KnowledgeBaseService knowledgeBaseService;
 
+    /**
+     * 知识库
+     */
     @PostMapping("/upload")
     public Result uploadKnowledgeBase(MultipartFile file) {
         knowledgeBaseService.uploadKnowledgeBase(file);
+        return Result.success();
+    }
+
+    /**
+     * 知识图谱
+     */
+    @PostMapping("/upload/graph")
+    public Result uploadKnowledgeGraph(MultipartFile file) {
+        knowledgeBaseService.uploadKnowledgeGraph(file);
         return Result.success();
     }
 }

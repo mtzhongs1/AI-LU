@@ -13,13 +13,15 @@ import lombok.*;
 @Getter
 public enum ContentCategoryEnum {
     @Description("日常闲聊")
-    CHAT(1,"闲聊"),
+    CHAT(1,"日常闲聊"),
     @Description("知识问题")
-    ANSWER_QUESTIONS(2,"问题"),
+    ANSWER_QUESTIONS(2,"知识问题"),
     @Description("图片生成")
     IMAGE_GENERATION(3, "图片生成"),
     @Description("计算运算式")
-    COMPUTE(4,"计算");
+    COMPUTE(4,"计算运算式"),
+    @Description("心灵对话，用户的对话带有情绪色彩时")
+    SOULFUL_DIALOGUE(5,"心灵对话");
 
     ContentCategoryEnum(Integer type, String description) {
         this.type = type;

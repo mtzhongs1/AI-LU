@@ -5,7 +5,10 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import dev.langchain4j.store.embedding.neo4j.Neo4jEmbeddingStore;
 import jakarta.annotation.Resource;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,9 +31,19 @@ public class EmbeddingConfig {
         //freeThreadPoolExecutor是线程池，用于并行化
         return new AllMiniLmL6V2EmbeddingModel(freeThreadPoolExecutor);
     }
-    @Bean
-    public EmbeddingStore<TextSegment> embeddingStore() {
+    @Bean(name = "inMemoryEmbeddingStore")
+    public EmbeddingStore<TextSegment> inMemoryEmbeddingStore() {
         return new InMemoryEmbeddingStore<>();
+    }
+
+    @Bean(name = "neo4jEmbeddingStore")
+    public EmbeddingStore<TextSegment> neo4jEmbeddingStore() {
+        EmbeddingStore<TextSegment> embeddingStore = Neo4jEmbeddingStore.builder()
+                .withBasicAuth("bolt://localhost:7687/", "neo4j", "dfDF51d5")
+                .dimension(384)
+
+                .build();
+        return embeddingStore;
     }
 
 }

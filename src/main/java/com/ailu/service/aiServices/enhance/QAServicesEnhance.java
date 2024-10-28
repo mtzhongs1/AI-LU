@@ -1,4 +1,4 @@
-package com.ailu.service.aiServices;
+package com.ailu.service.aiServices.enhance;
 
 import com.ailu.entity.Prompt;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -10,6 +10,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 
 
-public interface QAServices {
+public interface QAServicesEnhance {
     SseEmitter answer(Prompt prompt);
 }

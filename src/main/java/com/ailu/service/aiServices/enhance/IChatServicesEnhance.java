@@ -1,4 +1,4 @@
-package com.ailu.service.aiServices.Impl;
+package com.ailu.service.aiServices.enhance;
 
 import com.ailu.service.aiServices.IChatServices;
 import com.ailu.util.TokenStreamUtil;
@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-
 /**
  * @Description:
  * @Author: ailu
@@ -16,7 +14,7 @@ import java.io.IOException;
  */
 
 @Service
-public class IChatServicesImpl {
+public class IChatServicesEnhance {
     @Autowired
     private IChatServices chat;
 

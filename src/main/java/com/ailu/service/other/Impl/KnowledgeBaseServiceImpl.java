@@ -46,8 +46,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Autowired
     private EmbeddingModel embeddedModel;
 
-    @Autowired
-    private EmbeddingStore<TextSegment> embeddingStore;
+    @Resource(name = "inMemoryEmbeddingStore")
+    private EmbeddingStore<TextSegment> inMemoryEmbeddingStore;
+
+    @Resource(name = "neo4jEmbeddingStore")
+    private EmbeddingStore<TextSegment> neo4jEmbeddingStore;
 
     @Override
     public void uploadKnowledgeBase(MultipartFile file) {
@@ -80,7 +83,43 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
                 .documentSplitter(DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer()))
                 .embeddingModel(embeddedModel)
-                .embeddingStore(embeddingStore)
+                .embeddingStore(inMemoryEmbeddingStore)
+                .build();
+        ingestor.ingest(doc);
+    }
+
+    @Override
+    public void uploadKnowledgeGraph(MultipartFile file) {
+        //保存文档到本地
+        String originalFilename = file.getOriginalFilename();
+        String uuid = UuidUtils.getUUID();
+        log.info("上传文档的UUID为：{}",uuid);
+        String fileName = StringUtils.cleanPath(originalFilename);
+        String ext = getFileExtension(fileName);
+        String pathName = "D:/RAG/" + uuid + "." + ext;
+
+        try {
+            file.transferTo(new File(pathName));
+        } catch (IOException e) {
+            log.error("save to local error", e);
+        }
+
+        //转化文档格式
+        Document doc = transferExt(ext, pathName);
+        //使用InMemoryEmbeddingStore嵌入
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+
+                // 使用指定的 DocumentTransformer 转换文档。
+                .documentTransformer(document -> {
+                    //放置元数据uuid，进行标识
+                    document.metadata().put("uuid", uuid);
+                    return document;
+                })
+
+                // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
+                .documentSplitter(DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer()))
+                .embeddingModel(embeddedModel)
+                .embeddingStore(neo4jEmbeddingStore)
                 .build();
         ingestor.ingest(doc);
     }

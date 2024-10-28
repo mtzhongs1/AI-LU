@@ -1,11 +1,9 @@
-package com.ailu.service.aiServices.Impl;
+package com.ailu.service.aiServices.enhance;
 
 import com.ailu.entity.Prompt;
 import com.ailu.properties.models.Zhipu;
 import com.ailu.service.aiServices.IQAServices;
-import com.ailu.service.aiServices.QAServices;
 import com.ailu.util.TokenStreamUtil;
-import com.google.common.collect.ImmutableMap;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -24,8 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
@@ -37,9 +33,9 @@ import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metad
  */
 @Service
 @Slf4j
-public class QAServiceImpl implements QAServices {
+public class QAServicesEnhanceImpl implements QAServicesEnhance {
 
-    @Autowired
+    @Resource(name = "inMemoryEmbeddingStore")
     private EmbeddingStore<TextSegment> embeddingStore;
     @Autowired
     private EmbeddingModel embeddingModel;

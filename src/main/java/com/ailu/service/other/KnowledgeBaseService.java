@@ -10,4 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface KnowledgeBaseService {
     void uploadKnowledgeBase(MultipartFile file);
+
+    void uploadKnowledgeGraph(MultipartFile file);
 }
