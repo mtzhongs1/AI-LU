@@ -8,8 +8,9 @@ import lombok.Data;
  * @Author: ailu
  * @Date: 2024/10/28 下午5:22
  */
+@Description("实体和关系")
 @Data
-public class Node {
+public class NodeAndEdge {
 
     //确定实体
     @Description("性格")

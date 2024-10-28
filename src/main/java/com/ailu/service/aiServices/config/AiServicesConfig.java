@@ -1,10 +1,7 @@
 package com.ailu.service.aiServices.config;
 
 import com.ailu.properties.models.Zhipu;
-import com.ailu.service.aiServices.ClassificationServices;
-import com.ailu.service.aiServices.ComputeServices;
-import com.ailu.service.aiServices.CustomizeServices;
-import com.ailu.service.aiServices.IChatServices;
+import com.ailu.service.aiServices.*;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel;
 import dev.langchain4j.model.zhipu.ZhipuAiImageModel;
@@ -50,5 +47,11 @@ public class AiServicesConfig {
     public ComputeServices computeServices(){
         ChatLanguageModel model = Zhipu.buildChatLanguageModel(Zhipu.GLM_4_FLASH, 0.9);
         return AiServices.create(ComputeServices.class, model);
+    }
+
+    @Bean
+    public ExtractEntityAndRelationServices extractEntityAndRelationServices(){
+        ChatLanguageModel model = Zhipu.buildChatLanguageModel(Zhipu.GLM_4_FLASH, 0.5);
+        return AiServices.create(ExtractEntityAndRelationServices.class, model);
     }
 }

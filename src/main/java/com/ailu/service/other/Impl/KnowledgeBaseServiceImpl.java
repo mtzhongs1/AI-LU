@@ -1,9 +1,12 @@
 package com.ailu.service.other.Impl;
 
+import com.ailu.entity.graph.NodeAndEdge;
 import com.ailu.executor.ThreadPoolExecutorFactory;
+import com.ailu.service.aiServices.ExtractEntityAndRelationServices;
 import com.ailu.service.other.KnowledgeBaseService;
 import com.ailu.util.UuidUtils;
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
 import dev.langchain4j.data.document.parser.apache.poi.ApachePoiDocumentParser;
@@ -27,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -51,6 +56,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Resource(name = "neo4jEmbeddingStore")
     private EmbeddingStore<TextSegment> neo4jEmbeddingStore;
+
+    @Autowired
+    private ExtractEntityAndRelationServices extractEntityAndRelationServices;
 
     @Override
     public void uploadKnowledgeBase(MultipartFile file) {
@@ -90,6 +98,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     public void uploadKnowledgeGraph(MultipartFile file) {
+
         //保存文档到本地
         String originalFilename = file.getOriginalFilename();
         String uuid = UuidUtils.getUUID();
@@ -106,6 +115,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
         //转化文档格式
         Document doc = transferExt(ext, pathName);
+
+        DocumentSplitter documentSplitter = buildDocumentSplitter();
+        List<NodeAndEdge> nodeAndEdges = extractNodeAndRelation(documentSplitter, doc);
+
+
         //使用InMemoryEmbeddingStore嵌入
         EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
 
@@ -117,11 +131,25 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 })
 
                 // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
-                .documentSplitter(DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer()))
+                .documentSplitter(documentSplitter)
                 .embeddingModel(embeddedModel)
                 .embeddingStore(neo4jEmbeddingStore)
                 .build();
         ingestor.ingest(doc);
+    }
+
+    private List<NodeAndEdge> extractNodeAndRelation(DocumentSplitter documentSplitter, Document doc) {
+        List<NodeAndEdge> nodeAndEdges = new ArrayList<>();
+        List<TextSegment> textSegments = documentSplitter.split(doc);
+        for (TextSegment textSegment : textSegments) {
+            nodeAndEdges.add(extractEntityAndRelationServices.extractNodeAndRelation(textSegment.text()));
+        }
+        return nodeAndEdges;
+    }
+
+    //构建文档分割器
+    private static DocumentSplitter buildDocumentSplitter() {
+        return DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer());
     }
 
     //获取文件后缀

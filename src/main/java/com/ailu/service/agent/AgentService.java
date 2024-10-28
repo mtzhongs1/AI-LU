@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @Description: Agent接口
@@ -42,8 +44,9 @@ public class AgentService {
     private ComputeServices computeServices;
 
     public Result agent(Prompt prompt){
-        //切分用户问题
-        List<String> promptSegs = customizeServices.splitPrompt(prompt.getPrompt());
+        //切分用户问题，因为智谱AI不提供json格式，所以没办法返回List<String>
+        String promptSegsStr = customizeServices.splitPrompt(prompt.getPrompt());
+        List<String> promptSegs = extractBracketContents(promptSegsStr);
 
         List<Object> results = new ArrayList<>();
         for (String promptSeg : promptSegs) {
@@ -63,5 +66,22 @@ public class AgentService {
             results.add(result);
         }
         return Result.success(results);
+    }
+
+    public static List<String> extractBracketContents(String input) {
+        // 定义正则表达式来匹配 [] 内的内容
+        String regex = "\\[(.*?)\\]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        // 创建一个列表来存储结果
+        List<String> result = new ArrayList<>();
+
+        // 查找所有匹配项并添加到列表中
+        while (matcher.find()) {
+            result.add(matcher.group(1)); // group(1) 获取第一个捕获组，即 [] 内的内容
+        }
+
+        return result;
     }
 }
