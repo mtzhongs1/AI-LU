@@ -30,7 +30,7 @@ public class ThreadPoolExecutorFactory {
                 return thread;
             }
         };
-        return new ThreadPoolExecutor(1,2,100, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(4),threadFactory);
+        return new ThreadPoolExecutor(2,4,100, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(4),threadFactory);
     }
 
     @Bean(name = "vipThreadPoolExecutor")

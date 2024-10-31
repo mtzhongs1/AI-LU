@@ -7,8 +7,6 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.store.embedding.neo4j.Neo4jEmbeddingStore;
 import jakarta.annotation.Resource;
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.GraphDatabase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,7 +39,6 @@ public class EmbeddingConfig {
         EmbeddingStore<TextSegment> embeddingStore = Neo4jEmbeddingStore.builder()
                 .withBasicAuth("bolt://localhost:7687/", "neo4j", "dfDF51d5")
                 .dimension(384)
-
                 .build();
         return embeddingStore;
     }

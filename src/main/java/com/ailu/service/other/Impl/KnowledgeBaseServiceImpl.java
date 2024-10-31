@@ -1,16 +1,24 @@
 package com.ailu.service.other.Impl;
 
+import com.ailu.entity.graph.GraphData;
 import com.ailu.entity.graph.NodeAndEdge;
 import com.ailu.executor.ThreadPoolExecutorFactory;
 import com.ailu.service.aiServices.ExtractEntityAndRelationServices;
 import com.ailu.service.other.KnowledgeBaseService;
 import com.ailu.util.UuidUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
 import dev.langchain4j.data.document.parser.apache.poi.ApachePoiDocumentParser;
+import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
+import dev.langchain4j.data.document.splitter.DocumentByRegexSplitter;
+import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
@@ -19,10 +27,15 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import dev.langchain4j.store.graph.neo4j.Neo4jGraph;
 import jakarta.annotation.Resource;
 import jakarta.annotation.Resources;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -31,11 +44,16 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.loadDocument;
+import static org.neo4j.driver.Values.parameters;
 
 /**
  * @Description: 知识库相关操作
@@ -116,40 +134,91 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         //转化文档格式
         Document doc = transferExt(ext, pathName);
 
-        DocumentSplitter documentSplitter = buildDocumentSplitter();
-        List<NodeAndEdge> nodeAndEdges = extractNodeAndRelation(documentSplitter, doc);
-
-
-        //使用InMemoryEmbeddingStore嵌入
-        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-
-                // 使用指定的 DocumentTransformer 转换文档。
-                .documentTransformer(document -> {
-                    //放置元数据uuid，进行标识
-                    document.metadata().put("uuid", uuid);
-                    return document;
-                })
-
-                // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
-                .documentSplitter(documentSplitter)
-                .embeddingModel(embeddedModel)
-                .embeddingStore(neo4jEmbeddingStore)
-                .build();
-        ingestor.ingest(doc);
-    }
-
-    private List<NodeAndEdge> extractNodeAndRelation(DocumentSplitter documentSplitter, Document doc) {
-        List<NodeAndEdge> nodeAndEdges = new ArrayList<>();
+        // 句号分割器
+        DocumentSplitter documentSplitter = new DocumentByRegexSplitter("(?<=\\.|\\。|\\n)\\s*"," ",200,100);
+        // DocumentSplitter documentSplitter = buildDocumentSplitter();
         List<TextSegment> textSegments = documentSplitter.split(doc);
-        for (TextSegment textSegment : textSegments) {
-            nodeAndEdges.add(extractEntityAndRelationServices.extractNodeAndRelation(textSegment.text()));
+
+        try(Driver driver = GraphDatabase.driver("bolt://localhost:7687/"
+                , AuthTokens.basic("neo4j", "dfDF51d5"));
+            Session session = driver.session()
+        ){
+            Set<String> nodes = new HashSet<>();
+            Set<GraphData.Relation> relations = new HashSet<>();
+            for (TextSegment textSegment : textSegments) {
+                //提取实体和关系
+                String nodeAndData = extractEntityAndRelationServices.extractNodeAndRelation(textSegment.text());
+
+                String jsonStr = extractJson(nodeAndData);
+                System.out.println(jsonStr);
+                ObjectMapper objectMapper = new ObjectMapper();
+                GraphData graphData = objectMapper.readValue(jsonStr, GraphData.class);
+                nodes.addAll(graphData.getNodes());
+                relations.addAll(graphData.getRelations());
+            }
+            session.writeTransaction(tx -> {
+                for (String node : nodes) {
+                    String query = String.format("CREATE (u:`%s`)", node);
+                    tx.run(query);
+                }
+                for (GraphData.Relation relation : relations) {
+                    String query = String.format(
+                            "MERGE (a:`%s` {name: $subjectName}) " +
+                                    "MERGE (b:`%s` {name: $objectName}) " +
+                                    "MERGE (a)-[r:`%s`]->(b)",
+                            relation.getSubject(),
+                            relation.getObject(),
+                            relation.getRelation()
+                    );
+                    tx.run(query, org.neo4j.driver.Values.parameters(
+                            "subjectName", relation.getSubject(),
+                            "objectName", relation.getObject()
+                    ));
+                }
+                return null;
+            });
+        } catch (Exception e) {
+            log.error("save to neo4j error: ", e);
         }
-        return nodeAndEdges;
+
+
+        // //使用InMemoryEmbeddingStore嵌入
+        // EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+        //
+        //         // 使用指定的 DocumentTransformer 转换文档。
+        //         .documentTransformer(document -> {
+        //             //放置元数据uuid，进行标识
+        //             document.metadata().put("uuid", uuid);
+        //             return Document.document(nodeAndData, document.metadata());
+        //         })
+        //
+        //         // 使用指定的 DocumentSplitter 将文档拆分为 TextSegments
+        //         .documentSplitter(documentSplitter)
+        //         .embeddingModel(embeddedModel)
+        //         .embeddingStore(neo4jEmbeddingStore)
+        //         .build();
+        // ingestor.ingest(doc);
     }
+
+    //提取最外层的json字符串
+    private String extractJson(String nodeAndData) {
+        int first = nodeAndData.indexOf("{");
+        int last = nodeAndData.lastIndexOf("}");
+        return first >= 0 && last >= 0 ? nodeAndData.substring(first, last + 1) : nodeAndData;
+    }
+
+    // private List<String> extractNodeAndRelation(DocumentSplitter documentSplitter, Document doc) {
+    //     List<String> nodeAndEdges = new ArrayList<>();
+    //     List<TextSegment> textSegments = documentSplitter.split(doc);
+    //     for (TextSegment textSegment : textSegments) {
+    //         nodeAndEdges.add(extractEntityAndRelationServices.extractNodeAndRelation(textSegment.text()));
+    //     }
+    //     return nodeAndEdges;
+    // }
 
     //构建文档分割器
     private static DocumentSplitter buildDocumentSplitter() {
-        return DocumentSplitters.recursive(1000, 200, new OpenAiTokenizer());
+        return DocumentSplitters.recursive(500, 200, new OpenAiTokenizer());
     }
 
     //获取文件后缀

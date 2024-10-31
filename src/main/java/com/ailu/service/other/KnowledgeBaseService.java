@@ -1,5 +1,6 @@
 package com.ailu.service.other;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

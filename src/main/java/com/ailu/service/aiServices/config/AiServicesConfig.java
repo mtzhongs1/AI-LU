@@ -52,6 +52,7 @@ public class AiServicesConfig {
     @Bean
     public ExtractEntityAndRelationServices extractEntityAndRelationServices(){
         ChatLanguageModel model = Zhipu.buildChatLanguageModel(Zhipu.GLM_4_FLASH, 0.5);
+        // ChatLanguageModel model = Zhipu.buildChatLanguageModel("glm-4", 0.5);
         return AiServices.create(ExtractEntityAndRelationServices.class, model);
     }
 }
